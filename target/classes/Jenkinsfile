@@ -1,0 +1,32 @@
+Pipeline {
+	agent none
+	stages {
+		stage('Example Build') withCredentials ([[$class: 'UsernamePasswordMultiBinding',
+		credentialsId: '<CREDENTIAL_ID>'
+		usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD' ]])
+		{
+			steps {
+                def mvnHome = tool 'Maven 3.3.9'
+				echo 'Hello, Maven Test with Liquibase'
+				sh 'echo uname=$USERNAME pwd=$PASSWORD'
+                def pom = readMavenPom file: 'pom.xml'
+                developmentArtifactVersion = "${pom.version}-${targetVersion}"
+                print pom.version
+				liquibase --driver=com.microsoft.sqlserver.jdbc.SQLServerDriver \
+				--classpath=c:\users\myuser\Liquibase\sqljdbc_7.0\enu\msql-jdbc-7.0.0.jre8.jar" \
+				--url="jdbc:sqlserver://mydbserver:1433;databaseName:ej_poc;integratedSecurity=false;" \
+				--username=$USERNAME --password=$PASSWORD \
+				--changeLogFile="c:\users\myuser\my.changelog-master.xml" \
+				archive 'target*//*.jar'
+                Update
+			}
+		}
+		stage(Example Test) {
+			steps {
+				echo 'Hello JDK'
+				sh 'java -version'
+
+			}
+		}
+	}
+}
